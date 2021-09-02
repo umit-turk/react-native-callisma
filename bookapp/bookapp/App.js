@@ -27,7 +27,7 @@ const App = () => {
         {/* Tabs */}
         <Stack.Screen name="Tab" component={Tabs} />
 
-        <Stack.Screen name="BookDetail" component={BookDetail} />
+        <Stack.Screen name="BookDetail" component={BookDetail} options={{headerShown: false}} />
       </Stack.Navigator>
     </NavigationContainer>
   )

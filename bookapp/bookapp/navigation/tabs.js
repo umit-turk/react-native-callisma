@@ -6,7 +6,7 @@ import {COLORS, icons} from '../constans';
 
 const Tab = createBottomTabNavigator();
 
-const tabOptions = {
+const tabOptions =  {
   showLable: false,
   style: {
     height: '10',
@@ -16,7 +16,8 @@ const tabOptions = {
 const Tabs = () => {
     return (
   <Tab.Navigator
-    defaultScreenOptions={tabOptions}
+      
+    screenOptions = {tabOptions}
     screenOptions={({route}) => ({
       tabBarIcon: ({focused}) => {
         const tintColor = focused ? COLORS.white : COLORS.gray;
