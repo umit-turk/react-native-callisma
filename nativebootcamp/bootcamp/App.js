@@ -21,6 +21,10 @@ import {
   StyleSheet,
   TextInput,
   Button,
+  StatusBar,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform
 } from 'react-native';
 import Welcome, {SayThank, SayHello} from './src/components/Welcome';
 import CustomText from './src/components/customText/index';
@@ -29,7 +33,10 @@ import {
   ThemeProvider,
   useThemeContext,
 } from './src/utils/theme/ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const storageKey = 'projectTracker';
+const otherKey = 'otherKey';
 // const DATA = [
 //   {
 //     title: "Main dishes",
@@ -53,11 +60,16 @@ const CustomInput = forwardRef((props, ref) => {
   const inputRef = useRef(null);
   const [text, setText] = useState('');
 
-  useImperativeHandle(ref, () =>({
-    value: () =>alert(text),
-    focus: () => inputRef.current.focus(),
-    characterCount: () => alert(`karakter sayısı ${text.length}`) || text.length,
-  }), [])
+  useImperativeHandle(
+    ref,
+    () => ({
+      value: () => alert(text),
+      focus: () => inputRef.current.focus(),
+      characterCount: () =>
+        alert(`karakter sayısı ${text.length}`) || text.length,
+    }),
+    [],
+  );
   return (
     <TextInput
       onChangeText={setText}
@@ -68,8 +80,103 @@ const CustomInput = forwardRef((props, ref) => {
   );
 });
 
-
 const App = () => {
+  const [value, setValue] = useState('');
+  const [inputValue, setInputValue] = useState();
+
+  const setItem = async val => {
+    try {
+      const jsonData = JSON.stringify(val);
+      console.log('jsonData', jsonData);
+      await AsyncStorage.setItem(otherKey, inputValue);
+      setValue(jsonData);
+    } catch (error) {
+      console.log(`error: ${error}`);
+    }
+  };
+  const getItem = async () => {
+    try {
+      const jsonData = await AsyncStorage.getItem(storageKey);
+      setValue(jsonData);
+
+      console.log('response', jsonData);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const mergeItem = async val => {
+    try {
+      const jsonData = JSON.stringify(val);
+
+      await AsyncStorage.mergeItem(storageKey, jsonData);
+
+      const storageData = await AsyncStorage.getItem(storageKey);
+
+      setValue(storageData);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const removeItem = async () => {
+    try {
+      await AsyncStorage.removeItem(storageKey);
+      setValue(null);
+    } catch (error) {
+      console.log(`removeItem: ${error}`);
+    }
+  };
+
+  const clearAll = async () => {
+    try {
+      await AsyncStorage.clear();
+      setValue(null);
+    } catch (error) {
+      console.log(`error ${error}`);
+    }
+  };
+
+  // const multiGate = async () => {
+  //   try {
+  //     const response = await AsyncStorage.multiGet([storageKey, otherKey]);
+  //     console.log('Multiget Response :', response);
+  //   } catch (error) {
+  //     console.log('multigate', multiGate);
+  //   }
+  // };
+
+  // const multiRemove = async () => {
+  //   try {
+  //     await AsyncStorage.multiRemove([storageKey, otherKey]);
+  //     setValue(null);
+  //   } catch (error) {
+  //     console.log('multigate', multiRemove);
+  //   }
+  // };
+
+  // const multiSet = async (projectValue, otherValue) => {
+  //   try {
+  //     console.log('type of values: ', typeof projectValue, typeof otherValue);
+  //     const projectvaluestring = JSON.stringify(projectValue);
+  //     const othervaluestring = JSON.stringify(otherValue);
+  //     const keyValue = [
+  //       [storageKey, projectvaluestring],
+  //       [otherKey, othervaluestring],
+  //     ];
+  //    await AsyncStorage.multiSet(keyValue);
+  //     setValue(projectvaluestring);
+  //   } catch (error) {
+  //     console.log('multigate', multiSet);
+  //   }
+  // };
+
+  useEffect(() => {
+    getItem();
+  }, []);
+
+  console.log(AsyncStorage);
+
   const {isDarkMode, theme, toggleTheme} = useContext(ThemeContext);
 
   const inputRef = useRef(null);
@@ -80,8 +187,7 @@ const App = () => {
     }
   };
 
-  const [pageSize, setPageSize] = useState(1)
-  
+  const [pageSize, setPageSize] = useState(1);
 
   // useEffect(() => {
   //   axios.get(`${apiURL}?size=${pageSize}`).then(response => {
@@ -91,12 +197,13 @@ const App = () => {
 
   // console.log(pageSize)
 
-  
-
-  const changePageSize = useCallback((page) => {
-    console.log("render oldum change pagesize", page)
-    setPageSize(page => page + 1);
-  }, [pageSize]);
+  const changePageSize = useCallback(
+    page => {
+      console.log('render oldum change pagesize', page);
+      setPageSize(page => page + 1);
+    },
+    [pageSize],
+  );
 
   const apiURL = 'https://random-data-api.com/api/users/random_user';
 
@@ -158,6 +265,12 @@ const App = () => {
   // };
 
   return (
+    
+    <KeyboardAvoidingView
+    behavior={Platform.OS === 'ios' ? "height" : "padding"}
+     keyboardVerticalOffset={Platform.OS === "ios" ? 44 : 0}
+    >
+      <ScrollView>
     <SafeAreaView
       style={[styles.container, {backgroundColor: theme.backgroundColor}]}>
       <View>
@@ -171,10 +284,90 @@ const App = () => {
           <SayHello isDarkMode={isDarkMode} />
         </View>
         <View>
-          <Button title="page size değiştir." onPress={() => changePageSize(pageSize)} />
+          <TextInput
+            placeholder="asyncstorage"
+            style={{borderWidth: 1, height: 40, marginHorizontal: 10}}
+            onChangeText={setInputValue}
+          />
+          <TextInput
+            placeholder="asyncstorage"
+            style={{borderWidth: 1, height: 40, marginHorizontal: 10, marginVertical:25}}
+            onChangeText={setInputValue}
+          />
+          <TextInput
+            placeholder="asyncstorage"
+            style={{borderWidth: 1, height: 40, marginHorizontal: 10, marginVertical:25}}
+            onChangeText={setInputValue}
+          />
+          <TextInput
+            placeholder="asyncstorage"
+            style={{borderWidth: 1, height: 40, marginHorizontal: 10, marginVertical:25}}
+            onChangeText={setInputValue}
+          />
+           <TextInput
+            placeholder="asyncstorage"
+            style={{borderWidth: 1, height: 40, marginHorizontal: 10, marginVertical:25}}
+            onChangeText={setInputValue}
+          />
+           <TextInput
+            placeholder="asyncstorage"
+            style={{borderWidth: 1, height: 40, marginHorizontal: 10, marginVertical:25}}
+            onChangeText={setInputValue}
+          />
+          <TextInput
+            placeholder="asyncstorage"
+            style={{borderWidth: 1, height: 40, marginHorizontal: 10, marginVertical:25}}
+            onChangeText={setInputValue}
+          />
+          
+          
+         
+          {/* <Button
+            title="async storage set item"
+            onPress={() =>
+              setItem({name: 'umit', surname: 'türk', hobbies: 'spor,software'})
+            }
+          />
+          <Button title="async storage get item" onPress={() => getItem()} />
+          <Button
+            title="async storage merge item"
+            onPress={() => mergeItem({age: 16, hobbies: 'spor,software'})}
+          />
+          <Button
+            title="async storage remove item"
+            onPress={() => removeItem()}
+          /> */}
+          {/* <Button
+            title="async storage multigate item"
+            onPress={() => multiGate()}
+          /> */}
+          {/* <Button
+            title="async storage multiset item"
+            onPress={() =>
+              multiSet(
+                {name: 'umit', surname: 'türk', hobbies: 'spor,software'},
+                {name: 'ahmet', surname: 'yasar', hobbies: 'spor,software'},
+              )
+            }
+          /> */}
+          {/* <Button title="async storage clear item" onPress={() => clearAll()} /> */}
+          {/* <Button
+            title="async storage multiremove item"
+            onPress={() => multiRemove()}
+          /> */}
+        {/* </View>
+        <View>
+          <Button
+            title="page size değiştir."
+            onPress={() => changePageSize(pageSize)}
+          />
+          <Text>current value: {value}</Text>
           <CustomInput ref={inputRef} />
           <Button title="focus" onPress={() => inputRef?.current?.focus()} />
-          <Button title="karakter sayım" onPress={() => inputRef?.current.characterCount()} />
+          <Button
+            title="karakter sayım"
+            onPress={() => inputRef?.current.characterCount()}
+          />
           <Button title="value" onPress={() => inputRef?.current?.value()} />
         </View>
         <Text>Dark Mode {`${isDarkMode}`}</Text>
@@ -188,7 +381,7 @@ const App = () => {
           <CustomText
             text={`Katılımcı listem`}
             containerStyle={{fontWeight: 'bold', fontSize: 30}}
-          />
+          /> */}
           <Switch
             onValueChange={
               value => toggleTheme()
@@ -244,6 +437,9 @@ const App = () => {
         isDarkMode={isDarkMode}
       /> */}
     </SafeAreaView>
+    </ScrollView>
+    </KeyboardAvoidingView>
+    
   );
 };
 
