@@ -1,8 +1,11 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import {  Text, useColorScheme,StyleSheet } from 'react-native'
+import {  useThemeContext } from '../../utils/theme/ThemeContext'
 
-export default function index({ text, containerStyle, isDarkMode}) {
+export default function index({ text, containerStyle}) {
 
+    const {isDarkMode} = useThemeContext()
+    
     const themeStyle = isDarkMode ? styles.darkText : styles.lightText
 
     const container = {...themeStyle, ...containerStyle}
