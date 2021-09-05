@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {View, Text, Button} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
@@ -7,7 +7,6 @@ import LoginScreen from './src/Screen/LoginScreen';
 import DetailScreen from './src/Screen/DetailScreen';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import VectorIcons from './src/Icons/index';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -19,53 +18,10 @@ const screenName = {
   root: "root"
 }
 
-function AuthStack(){
-  return (
-    <Stack.Navigator screenOptions={{headerShown:false}}>
-      <Stack.Screen name={screenName.LoginScreen} component={LoginScreen} />
-    </Stack.Navigator>
-  )
-}
-function UserStack(){
-  return (
-    <Stack.Navigator initialRouteName="HomeScreen">
-     
-     <Stack.Group
-        screenOptions={{
-          headerStyle: {backgroundColor: 'tomato'},
-          headerLeft: () => (
-            <Button title="Info" onPress={() => alert('Info')} />
-          ),
-          headerBackTitleStyle: {color: 'white'},
-          headerRight: () => (
-            <Button
-              title="sepeti boşalt"
-              onPress={() => alert('sepeti boşalt')}
-              color="white"
-            />
-          ),
-        }}>
-        <Stack.Screen
-          name="HomeScreen"
-          component={HomeScreen}
-          options={{title: 'Anasayfa'}}
-        />
-        <Stack.Screen
-          name="DetailScreen"
-          component={DetailScreen}
-          options={{title: 'Detail'}}
-          initialParams={{age: 35, isShowTitle: false}}
-        />
-      </Stack.Group> 
-    </Stack.Navigator>
-  );
-}
-
 function StackNavigator() {
   return (
     <Stack.Navigator initialRouteName="HomeScreen">
-     
-     <Stack.Group
+      {/* <Stack.Group
         screenOptions={{
           headerStyle: {backgroundColor: 'tomato'},
           headerLeft: () => (
@@ -91,7 +47,30 @@ function StackNavigator() {
           options={{title: 'Detail'}}
           initialParams={{age: 35, isShowTitle: false}}
         />
-      </Stack.Group> 
+      </Stack.Group> */}
+      <Stack.Group screenOptions={{presentation: 'modal'}}>
+        <Stack.Screen
+          name="LoginScreen"
+          component={LoginScreen}
+          options={{
+            title: 'Giriş yap',
+            // gestureEnabled: false,
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen name="CustomStack">
+          {props => (
+            <HomeScreen
+              {...props}
+              extraData={[
+                {title: 'extradata'},
+                {title: 'extradata'},
+                {title: 'extradata'},
+              ]}
+            />
+          )}
+        </Stack.Screen>
+      </Stack.Group>
     </Stack.Navigator>
   );
 }
@@ -168,24 +147,9 @@ function TabNavigator(){
 }
 
 export default function App() {
-  const [isLogin, setIsLogin] = useState(false)
-
-  const getisLogin = async () => {
-  const response =  await  AsyncStorage.getItem("projectKey");
-  const responseOnject = JSON.parse(response)
-
-    setIsLogin(responseOnject.isLogin)
-
-  console.log("response",responseOnject);
-  } 
-
-  useEffect(() => {
-    getisLogin()
-  }, [])
-
   return (
     <NavigationContainer>
-      {isLogin ? UserStack() : AuthStack()}
+      {TabNavigator()}
     </NavigationContainer>
   );
 }
